@@ -1,0 +1,438 @@
+<title>친구들의 청도 여행</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: 여행사 상품 페이지 형식 — 상단 탭 + 일차 탭 + 일차별 아코디언 타임라인 */
+:root {
+  --bg: #ffffff;
+  --fg: #1d1b22;
+  --muted: #6f6b78;
+  --line: #e3e1e8;
+  --panel: #f2f1f5;
+  --day: #585b69;
+  --day-fg: #ffffff;
+  --accent: #6a2bc4;
+  --accent-soft: #f1eafb;
+  --font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16151a; --fg: #ecebf0; --muted: #a29fac; --line: #2f2d36; --panel: #201f26;
+    --day: #3b3d4a; --day-fg: #ffffff; --accent: #b48cf2; --accent-soft: #2a2238; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16151a; --fg: #ecebf0; --muted: #a29fac; --line: #2f2d36; --panel: #201f26;
+  --day: #3b3d4a; --day-fg: #ffffff; --accent: #b48cf2; --accent-soft: #2a2238; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 900px; margin: 0 auto; }
+header.trip { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 24px; margin-bottom: 22px; }
+header.trip h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em; text-wrap: balance; }
+header.trip p { margin: 0; color: var(--muted); font-size: 14px; }
+.chip { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 999px; }
+
+/* 상단 탭 */
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--fg); }
+.tabs button {
+  font: inherit; font-size: 16px; font-weight: 500; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-bottom: 0; margin-left: -1px; padding: 16px 6px; cursor: pointer;
+}
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.tabs button:focus-visible, .subtabs button:focus-visible, .expand:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 일차 탭 */
+.subbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+.subtabs { display: flex; gap: 4px; }
+.subtabs button {
+  font: inherit; font-size: 15px; color: var(--muted); background: none; border: 0; padding: 12px 18px;
+  border-bottom: 2px solid transparent; cursor: pointer;
+}
+.subtabs button.on { color: var(--fg); font-weight: 700; border-bottom-color: var(--accent); }
+.expand { font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+
+.notice { margin: 26px 0 30px; }
+.notice strong { color: var(--accent); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.notice p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+
+/* 일차 아코디언 */
+.days { display: grid; gap: 30px; }
+details.day { scroll-margin-top: 16px; }
+details.day summary { list-style: none; display: grid; grid-template-columns: 148px 1fr 44px; background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); cursor: pointer; }
+details.day summary::-webkit-details-marker { display: none; }
+details.day[open] summary { border-top-color: var(--fg); }
+.dlabel { background: var(--day); color: var(--day-fg); padding: 16px 24px; display: flex; flex-direction: column; justify-content: center; }
+.dlabel b { font-size: 20px; font-weight: 700; line-height: 1.3; }
+.dlabel span { font-size: 14px; font-weight: 700; }
+.dsum { padding: 16px 20px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.dsum b { font-weight: 700; }
+.dsum span { color: var(--muted); font-size: 14px; }
+.chev { display: flex; align-items: center; justify-content: center; }
+.chev svg { width: 18px; height: 18px; transition: transform .2s; }
+details.day[open] .chev svg { transform: rotate(180deg); }
+
+/* 타임라인 */
+.tl { list-style: none; margin: 0; padding: 26px 0 8px; position: relative; }
+.tl::before { content: ""; position: absolute; left: 17px; top: 40px; bottom: 30px; width: 1px; background: var(--line); }
+.stop { position: relative; display: grid; grid-template-columns: 36px 1fr; gap: 0 18px; padding-bottom: 26px; }
+.pin { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); box-shadow: 0 1px 6px rgba(0,0,0,.14); display: flex; align-items: center; justify-content: center; position: relative; }
+.pin svg { width: 16px; height: 16px; fill: var(--accent); }
+.stop h3 { margin: 4px 0 2px; font-size: 19px; font-weight: 700; }
+.stop .time { font-size: 13px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 8px; }
+.items { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.items li { min-width: 0; }
+.items b { font-weight: 500; }
+.items small { display: block; color: var(--muted); font-size: 13.5px; }
+.items li.ph { display: flow-root; }
+.items li.ph img { float: right; width: 150px; max-width: 40%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; margin: 2px 0 6px 16px; background: var(--panel); }
+.cn { color: var(--muted); font-weight: 400; font-size: 13px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 14px; padding: 12px 14px; background: var(--panel); font-size: 13.5px; }
+.meta span b { color: var(--muted); font-weight: 500; margin-right: 6px; }
+.food { margin-top: 12px; border: 1px solid var(--line); }
+.food h4 { margin: 0; padding: 10px 14px; font-size: 14px; font-weight: 700; color: var(--accent); background: var(--accent-soft); }
+.food ul { list-style: none; margin: 0; padding: 0; }
+.food li { display: grid; grid-template-columns: 52px 1fr; gap: 2px 12px; padding: 12px 14px; border-top: 1px solid var(--line); min-width: 0; }
+.food li:first-child { border-top: 0; }
+.food .when { font-size: 12px; font-weight: 700; color: var(--muted); padding-top: 2px; }
+.food b { font-weight: 700; }
+.food p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
+.food .menu { color: var(--fg); }
+.foot { position: relative; display: grid; grid-template-columns: 36px 1fr; gap: 0 18px; font-size: 13.5px; color: var(--fg); }
+.foot i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); justify-self: center; margin-top: 8px; position: relative; }
+
+/* 다른 탭 */
+.pane { padding-top: 28px; }
+.pane h2 { font-size: 19px; margin: 0 0 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin-bottom: 34px; }
+.card { border: 1px solid var(--line); padding: 16px 18px; min-width: 0; }
+.card h4 { margin: 0 0 4px; font-size: 16px; }
+.card p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.card .tag { font-size: 12px; color: var(--accent); font-weight: 700; }
+.card.photo { padding: 0; display: flex; flex-direction: column; }
+.card.photo img { display: block; width: 100%; max-width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--panel); }
+.card.photo .body { padding: 14px 18px 16px; }
+.credit { margin: -22px 0 34px; color: var(--muted); font-size: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tablebox { overflow-x: auto; margin-bottom: 34px; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--panel); width: 130px; font-weight: 700; white-space: nowrap; }
+.costhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.costhead h2 { margin: 0; }
+.costhead label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.costhead input { font: inherit; width: 64px; padding: 6px 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 4px; }
+.costhead input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cost th { width: auto; }
+.cost td.num, .cost th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cost td small { display: block; color: var(--muted); font-size: 12.5px; }
+.cost tfoot td { font-weight: 700; background: var(--accent-soft); color: var(--fg); }
+.cost tfoot tr.grp td { color: var(--accent); font-size: 16px; }
+.costnote { margin: -20px 0 34px; padding: 0; list-style: none; color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+.check { list-style: none; padding: 0; margin: 0 0 34px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 20px; }
+.check label { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+.check input { accent-color: var(--accent); width: 17px; height: 17px; }
+
+@media (max-width: 560px) {
+  .items li.ph img { width: 104px; margin-left: 12px; }
+  .tabs { grid-template-columns: repeat(3, 1fr); }
+  .tabs button { font-size: 14px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  .subtabs button { padding: 12px 10px; }
+  details.day summary { grid-template-columns: 96px 1fr 36px; }
+  .dlabel { padding: 12px 14px; }
+  .dlabel b { font-size: 17px; }
+  .dsum { padding: 12px 14px; }
+  .stop h3 { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .chev svg { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="trip">
+    <div>
+      <span class="chip">2박 3일 · 친구 여행</span>
+      <h1>친구들의 청도 여행</h1>
+    </div>
+    <p>2027.04.23(금) ~ 04.25(일) · 인천 ⇄ 칭다오 자오둥</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-pane="plan" id="tab-plan">여행일정</button>
+    <button role="tab" aria-selected="false" data-pane="spots" id="tab-spots">숙소 &amp; 관광지</button>
+    <button role="tab" aria-selected="false" data-pane="info" id="tab-info">참고사항</button>
+    <button role="tab" aria-selected="false" data-pane="pack" id="tab-pack">준비물</button>
+    <button role="tab" aria-selected="false" data-pane="cost" id="tab-cost">예상 경비</button>
+  </nav>
+
+  <!-- 여행일정 -->
+  <section class="pane-plan" id="pane-plan">
+    <div class="subbar">
+      <div class="subtabs">
+        <button class="on" data-day="d1">1일차</button>
+        <button data-day="d2">2일차</button>
+        <button data-day="d3">3일차</button>
+      </div>
+      <button class="expand" id="expandAll">일정 전체펼침</button>
+    </div>
+
+    <div class="notice">
+      <strong><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4.2M8 4.6v.1" stroke-linecap="round"/></svg>일정 변경 안내</strong>
+      <p>항공 시간, 날씨, 현지 사정에 따라 순서가 바뀔 수 있어요. 시간은 모두 현지 시간(한국보다 1시간 느림) 기준입니다.</p>
+    </div>
+
+    <div class="days">
+      <!-- 1일차 -->
+      <details class="day" id="d1" open>
+        <summary>
+          <div class="dlabel"><b>1일차</b><span>04/23(금)</span></div>
+          <div class="dsum"><b>인천, 칭다오</b><span>5.4 광장, 올림픽 요트경기장, 운소로 미식거리</span></div>
+          <div class="chev"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l5 5 5-5"/></svg></div>
+        </summary>
+        <ol class="tl">
+          <li class="stop">
+            <div class="pin"><svg viewBox="0 0 16 16"><path d="M8 0a6 6 0 0 0-6 6c0 4.4 6 10 6 10s6-5.6 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 8 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div>
+            <div>
+              <h3>인천</h3>
+              <ul class="items">
+                <li><span class="time">08:00</span><b>인천국제공항 집결 · 출국 수속</b><small>출발 2시간 전 도착. 여권 유효기간 6개월 이상 확인</small></li>
+                <li><span class="time">10:00</span><b>인천 출발</b><small>비행시간 약 1시간 30분</small></li>
+              </ul>
+            </div>
+          </li>
+          <li class="stop">
+            <div class="pin"><svg viewBox="0 0 16 16"><path d="M8 0a6 6 0 0 0-6 6c0 4.4 6 10 6 10s6-5.6 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 8 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div>
+            <div>
+              <h3>칭다오</h3>
+              <ul class="items">
+                <li><span class="time">10:30</span><b>칭다오 자오둥 국제공항 도착</b> <span class="cn">青岛胶东国际机场</span><small>디디(DiDi) 택시 또는 공항버스로 시내 이동 (약 1시간)</small></li>
+                <li><span class="time">12:30</span><b>호텔 짐 맡기기 · 점심</b><small>5.4 광장 인근 호텔. 점심은 칭다오 만두 전문점 추천 (船歌鱼水饺 – 생선만두)</small></li>
+                <li class="ph"><img src="img/54square.jpg" alt="5.4 광장" loading="lazy"><span class="time">14:30</span><b>5.4 광장</b> <span class="cn">五四广场</span><small>칭다오 상징인 붉은 횃불 조형물 '오월의 바람' 앞 단체사진</small></li>
+                <li class="ph"><img src="img/sailing.jpg" alt="올림픽 요트경기장" loading="lazy"><span class="time">15:30</span><b>칭다오 올림픽 요트경기장</b> <span class="cn">奥帆中心</span><small>2008 베이징 올림픽 요트 경기장. 해안 산책로 따라 걷기</small></li>
+                <li><span class="time">17:00</span><b>호텔 체크인 · 휴식</b></li>
+                <li><span class="time">18:30</span><b>운소로 미식거리 저녁</b> <span class="cn">云霄路美食街</span><small>해산물 골라 조리해 먹는 식당 골목. 바지락볶음(辣炒蛤蜊)과 칭다오 생맥주</small></li>
+                <li><span class="time">20:00</span><b>5.4 광장 야경 · 빛 쇼</b><small>주변 빌딩 외벽 조명 쇼 (주말 위주 운영, 당일 확인)</small></li>
+              </ul>
+              <div class="meta"><span><b>조식</b>기내/개별</span><span><b>중식</b>추안거 생선만두</span><span><b>석식</b>운소로 해산물</span><span><b>숙소</b>5.4 광장 인근 호텔</span></div>
+              <div class="food"><h4>1일차 맛집</h4><ul>
+                <li><span class="when">점심</span><div><b>추안거 위수이자오</b> <span class="cn">船歌鱼水饃</span><p><span class="menu">삼치만두(鲅鱼水饃), 먹물오징어만두(墨鱼水饃)</span><br>칭다오 대표 생선만두 체인. 시내에 분점이 많아 호텔에서 가까운 곳으로</p></div></li>
+                <li><span class="when">저녁</span><div><b>운소로 미식거리</b> <span class="cn">云霄路美食街</span><p><span class="menu">바지락볶음(辣炒蛤蜊), 가리비찜, 칭다오 생맥주</span><br>가게 앞 수조에서 해산물을 고르면 원하는 방식으로 조리. 주문 전 무게(斤, 500g)당 가격 확인</p></div></li>
+              </ul></div>
+            </div>
+          </li>
+          <li class="foot"><i></i><span>*상기 일정은 현지 사정(교통, 기상 변화)에 따라 친구들과 상의해 변경할 수 있습니다.</span></li>
+        </ol>
+      </details>
+
+      <!-- 2일차 -->
+      <details class="day" id="d2">
+        <summary>
+          <div class="dlabel"><b>2일차</b><span>04/24(토)</span></div>
+          <div class="dsum"><b>칭다오</b><span>잔교, 천주교당, 피차이위엔, 소어산, 칭다오 맥주박물관, 맥주거리</span></div>
+          <div class="chev"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l5 5 5-5"/></svg></div>
+        </summary>
+        <ol class="tl">
+          <li class="stop">
+            <div class="pin"><svg viewBox="0 0 16 16"><path d="M8 0a6 6 0 0 0-6 6c0 4.4 6 10 6 10s6-5.6 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 8 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div>
+            <div>
+              <h3>칭다오 구시가지</h3>
+              <ul class="items">
+                <li><span class="time">08:00</span><b>호텔 조식 후 출발</b></li>
+                <li class="ph"><img src="img/zhanqiao.jpg" alt="잔교" loading="lazy"><span class="time">09:00</span><b>잔교</b> <span class="cn">栈桥</span><small>바다 위로 440m 뻗은 다리와 회란각. 칭다오 맥주 라벨 속 그 풍경</small></li>
+                <li class="ph"><img src="img/cathedral.png" alt="천주교당" loading="lazy" style="object-position:center 30%"><span class="time">10:00</span><b>천주교당 (성 미카엘 성당)</b> <span class="cn">天主教堂</span><small>1934년 고딕 성당. 성당 앞 광장이 사진 명소</small></li>
+                <li class="ph"><img src="img/picaiyuan.jpg" alt="피차이위엔" loading="lazy"><span class="time">11:30</span><b>피차이위엔 · 점심</b> <span class="cn">劈柴院</span><small>100년 넘은 먹자골목. 꼬치, 해물 튀김 등 길거리 음식으로 점심</small></li>
+                <li class="ph"><img src="img/xiaoyushan.jpg" alt="소어산 전망" loading="lazy"><span class="time">13:30</span><b>소어산 공원</b> <span class="cn">小鱼山公园</span><small>정상 남조각에서 빨간 지붕 구시가지와 바다를 한눈에. 입장료 약 10위안</small></li>
+                <li class="ph"><img src="img/brewery.jpg" alt="칭다오 맥주박물관" loading="lazy"><span class="time">15:00</span><b>칭다오 맥주박물관</b> <span class="cn">青岛啤酒博物馆</span><small>1903년 공장 건물. 입장권에 원액 생맥주·흑맥주 시음 포함 (약 60위안, 사전 예매 권장)</small></li>
+                <li><span class="time">17:30</span><b>칭다오 맥주거리 저녁</b> <span class="cn">登州路啤酒街</span><small>봉지에 담아 파는 생맥주와 해산물로 저녁</small></li>
+                <li><span class="time">20:00</span><b>호텔 복귀 또는 대학로 야간 산책</b></li>
+              </ul>
+              <div class="meta"><span><b>조식</b>호텔식</span><span><b>중식</b>춘화루</span><span><b>석식</b>맥주거리</span><span><b>숙소</b>5.4 광장 인근 호텔</span></div>
+              <div class="food"><h4>2일차 맛집</h4><ul>
+                <li><span class="when">점심</span><div><b>춘화루</b> <span class="cn">春和楼</span><p><span class="menu">바삭한 닭요리(香酥鸡), 군만두(锅贴)</span><br>1891년 문을 연 노포. 중산로에 있어 피차이위엔과 걸어서 가까워요</p></div></li>
+                <li><span class="when">간식</span><div><b>피차이위엔 길거리 음식</b> <span class="cn">劈柴院</span><p><span class="menu">해초묵(海菜凉粉), 오징어꼬치, 해물튀김</span><br>조금씩 사서 나눠 먹기 좋아요</p></div></li>
+                <li><span class="when">시음</span><div><b>칭다오 맥주박물관</b> <span class="cn">青岛啤酒博物馆</span><p><span class="menu">원액 생맥주, 흑맥주</span><br>입장권에 시음이 포함돼 있어요</p></div></li>
+                <li><span class="when">저녁</span><div><b>등주로 맥주거리</b> <span class="cn">登州路啤酒街</span><p><span class="menu">봉지맥주(袋装啤酒), 매콤한 조개볶음, 양꼬치</span><br>박물관 바로 앞 거리. 가게마다 직접 뽑은 생맥주를 팔아요</p></div></li>
+              </ul></div>
+            </div>
+          </li>
+          <li class="foot"><i></i><span>*걷는 구간이 많아요. 편한 운동화 필수!</span></li>
+        </ol>
+      </details>
+
+      <!-- 3일차 -->
+      <details class="day" id="d3">
+        <summary>
+          <div class="dlabel"><b>3일차</b><span>04/25(일)</span></div>
+          <div class="dsum"><b>칭다오, 인천</b><span>팔대관, 대학로, 지모루 시장</span></div>
+          <div class="chev"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7l5 5 5-5"/></svg></div>
+        </summary>
+        <ol class="tl">
+          <li class="stop">
+            <div class="pin"><svg viewBox="0 0 16 16"><path d="M8 0a6 6 0 0 0-6 6c0 4.4 6 10 6 10s6-5.6 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 8 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div>
+            <div>
+              <h3>칭다오</h3>
+              <ul class="items">
+                <li><span class="time">08:00</span><b>호텔 조식 · 체크아웃</b><small>짐은 호텔 프런트에 맡기기</small></li>
+                <li class="ph"><img src="img/badaguan.jpg" alt="팔대관" loading="lazy"><span class="time">09:00</span><b>팔대관 풍경구</b> <span class="cn">八大关</span><small>유럽풍 별장이 모인 거리. 4월 말이면 벚꽃·해당화 시즌 끝자락</small></li>
+                <li><span class="time">10:30</span><b>대학로 · 위산로 사진 거리</b> <span class="cn">大学路</span><small>붉은 담장 모퉁이 '网红墙' 인증샷</small></li>
+                <li><span class="time">11:30</span><b>왕지에 꼬치구이 점심 · 지모루 시장</b> <span class="cn">即墨路小商品市场</span><small>기념품, 차, 간식 쇼핑. 흥정 필수</small></li>
+                <li><span class="time">13:30</span><b>호텔에서 짐 찾아 공항 이동</b><small>디디 택시 약 1시간 (약 120~150위안)</small></li>
+              </ul>
+              <div class="food"><h4>3일차 맛집</h4><ul>
+                <li><span class="when">점심</span><div><b>왕지에 꼬치구이</b> <span class="cn">王姐烧烤</span><p><span class="menu">양꼬치, 오징어구이, 구운 만두</span><br>현지인이 줄 서는 구시가지 꼬치집. 대학로 구경 후 지모루 시장 가기 전에 들르기</p></div></li>
+                <li><span class="when">기념품</span><div><b>지모루 시장 먹거리 쇼핑</b> <span class="cn">即墨路</span><p><span class="menu">말린 해산물 간식, 칭다오 맥주 캔 세트, 녹차(崂山绿茶)</span><br>맥주는 수하물 무게와 면세 한도를 확인하고 사기</p></div></li>
+              </ul></div>
+              <ul class="items" style="margin-top:14px">
+                <li><span class="time">15:00</span><b>자오둥 공항 출국 수속</b></li>
+                <li><span class="time">17:00</span><b>칭다오 출발</b></li>
+              </ul>
+            </div>
+          </li>
+          <li class="stop">
+            <div class="pin"><svg viewBox="0 0 16 16"><path d="M8 0a6 6 0 0 0-6 6c0 4.4 6 10 6 10s6-5.6 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 8 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg></div>
+            <div>
+              <h3>인천</h3>
+              <ul class="items">
+                <li><span class="time">19:30</span><b>인천국제공항 도착 · 해산</b><small>한국 시간 기준</small></li>
+              </ul>
+              <div class="meta"><span><b>조식</b>호텔식</span><span><b>중식</b>왕지에 꼬치구이</span><span><b>석식</b>기내/개별</span></div>
+            </div>
+          </li>
+          <li class="foot"><i></i><span>*맛집 영업시간과 지점 위치는 출발 전 따우디엤핑(大众点评)이나 지도 앱에서 확인해 주세요.</span></li>
+          <li class="foot"><i></i><span>*항공권 예약 후 실제 출·도착 시간에 맞춰 조정해 주세요.</span></li>
+        </ol>
+      </details>
+    </div>
+  </section>
+
+  <!-- 숙소 & 관광지 -->
+  <section class="pane" id="pane-spots" hidden>
+    <h2>숙소</h2>
+    <div class="cards">
+      <div class="card"><span class="tag">추천 지역</span><h4>5.4 광장 · 시남구</h4><p>바다 앞이라 야경과 산책이 편하고, 구시가지·맥주거리까지 택시 15~20분. 2박 동일 숙소 권장.</p></div>
+      <div class="card"><span class="tag">대안</span><h4>잔교 · 구시가지</h4><p>잔교, 천주교당, 피차이위엔이 도보권. 공항까지는 조금 더 멀어요.</p></div>
+    </div>
+    <h2>관광지</h2>
+    <div class="cards">
+      <div class="card photo"><img src="img/54square.jpg" alt="5.4 광장의 붉은 횃불 조형물" loading="lazy"><div class="body"><span class="tag">1일차</span><h4>5.4 광장 <span class="cn">五四广场</span></h4><p>붉은 횃불 조형물과 해변 광장. 밤에는 빌딩 조명 쇼.</p></div></div>
+      <div class="card photo"><img src="img/sailing.jpg" alt="바다에서 본 올림픽 요트경기장" loading="lazy"><div class="body"><span class="tag">1일차</span><h4>올림픽 요트경기장 <span class="cn">奥帆中心</span></h4><p>요트가 늘어선 마리나와 해안 산책로.</p></div></div>
+      <div class="card photo"><img src="img/zhanqiao.jpg" alt="바다 위로 뻗은 잔교와 회란각" loading="lazy"><div class="body"><span class="tag">2일차</span><h4>잔교 <span class="cn">栈桥</span></h4><p>칭다오 맥주 라벨 속 그 다리와 회란각.</p></div></div>
+      <div class="card photo"><img src="img/cathedral.png" alt="천주교당 정면의 쌍탑" loading="lazy" style="object-position:center 30%"><div class="body"><span class="tag">2일차</span><h4>천주교당 <span class="cn">天主教堂</span></h4><p>쌍탑 고딕 성당. 웨딩 촬영 명소.</p></div></div>
+      <div class="card photo"><img src="img/picaiyuan.jpg" alt="피차이위엔 먹자골목 입구" loading="lazy"><div class="body"><span class="tag">2일차</span><h4>피차이위엔 <span class="cn">劈柴院</span></h4><p>100년 넘은 먹자골목. 꼬치와 해물 튀김으로 점심.</p></div></div>
+      <div class="card photo"><img src="img/xiaoyushan.jpg" alt="소어산에서 내려다본 구시가지와 바다" loading="lazy"><div class="body"><span class="tag">2일차</span><h4>소어산 <span class="cn">小鱼山</span></h4><p>구시가지 빨간 지붕과 바다를 내려다보는 전망 포인트.</p></div></div>
+      <div class="card photo"><img src="img/brewery.jpg" alt="칭다오 맥주 공장 건물" loading="lazy"><div class="body"><span class="tag">2일차</span><h4>칭다오 맥주박물관 <span class="cn">青岛啤酒博物馆</span></h4><p>120년 역사 양조장. 갓 뽑은 원액 맥주 시음.</p></div></div>
+      <div class="card photo"><img src="img/badaguan.jpg" alt="팔대관의 석조 별장 화석루" loading="lazy"><div class="body"><span class="tag">3일차</span><h4>팔대관 <span class="cn">八大关</span></h4><p>유럽풍 별장 거리. 4월엔 꽃길 산책.</p></div></div>
+      <div class="card"><span class="tag">3일차</span><h4>지모루 시장 <span class="cn">即墨路</span></h4><p>기념품·잡화 시장. 흥정은 기본.</p></div>
+    </div>
+    <p class="credit">사진: Wikimedia Commons (CC 라이선스, 각 원저작자)</p>
+  </section>
+
+  <!-- 참고사항 -->
+  <section class="pane" id="pane-info" hidden>
+    <h2>여행 전 확인</h2>
+    <div class="tablebox"><table>
+      <tr><th>입국</th><td>한국 여권 무비자 입국 정책이 연장되어 왔지만 기한이 있는 조치예요. 출발 전 주중 한국대사관 공지로 꼭 확인하세요.</td></tr>
+      <tr><th>시차</th><td>한국보다 1시간 느림 (한국 12시 = 칭다오 11시)</td></tr>
+      <tr><th>날씨</th><td>4월 말 약 10~18°C. 바닷바람이 차서 얇은 겉옷 필수</td></tr>
+      <tr><th>결제</th><td>알리페이/위챗페이에 한국 카드 연결해 가기. 현금(위안)은 비상용 소액만</td></tr>
+      <tr><th>인터넷</th><td>카카오톡·구글·인스타그램 접속 제한. 로밍 또는 해외 eSIM 이용 권장</td></tr>
+      <tr><th>교통</th><td>디디(DiDi) 앱을 미리 설치. 목적지는 중국어 이름으로 보여주기</td></tr>
+      <tr><th>전압</th><td>220V, 한국 플러그 대부분 사용 가능 (멀티 어댑터 있으면 편함)</td></tr>
+    </table></div>
+  </section>
+
+  <!-- 준비물 -->
+  <section class="pane" id="pane-pack" hidden>
+    <h2>준비물 체크리스트</h2>
+    <ul class="check">
+      <li><label><input type="checkbox" id="p1">여권 (유효기간 6개월 이상)</label></li>
+      <li><label><input type="checkbox" id="p2">항공권 · 호텔 예약 확인서</label></li>
+      <li><label><input type="checkbox" id="p3">알리페이/위챗페이 설정</label></li>
+      <li><label><input type="checkbox" id="p4">eSIM 또는 로밍</label></li>
+      <li><label><input type="checkbox" id="p5">위안화 소액 현금</label></li>
+      <li><label><input type="checkbox" id="p6">디디 · 번역 · 지도 앱</label></li>
+      <li><label><input type="checkbox" id="p7">얇은 겉옷 · 바람막이</label></li>
+      <li><label><input type="checkbox" id="p8">편한 운동화</label></li>
+      <li><label><input type="checkbox" id="p9">보조배터리 · 충전기</label></li>
+      <li><label><input type="checkbox" id="p10">상비약 · 소화제</label></li>
+    </ul>
+  </section>
+
+  <!-- 예상 경비 -->
+  <section class="pane" id="pane-cost" hidden>
+    <div class="costhead">
+      <h2>예상 경비 (1인 기준)</h2>
+      <label for="people">인원 <input type="number" id="people" min="1" max="20" value="4"> 명</label>
+    </div>
+    <div class="tablebox"><table class="cost">
+      <thead><tr><th>항목</th><th>기준</th><th class="num">아끼면</th><th class="num">여유롭게</th></tr></thead>
+      <tbody id="costRows"></tbody>
+      <tfoot>
+        <tr><td colspan="2">1인 합계</td><td class="num" id="sumLo"></td><td class="num" id="sumHi"></td></tr>
+        <tr class="grp"><td colspan="2" id="grpLabel">일행 전체</td><td class="num" id="grpLo"></td><td class="num" id="grpHi"></td></tr>
+      </tfoot>
+    </table></div>
+    <ul class="costnote">
+      <li>* 환율은 1위안 = 약 195원으로 계산했어요. 출발 전 실제 환율과 항공권 가격을 확인해 주세요.</li>
+      <li>* 숙소는 2인 1실, 택시는 4명이 한 대를 나눠 타는 것으로 잡았어요.</li>
+      <li>* 쇼핑은 사람마다 차이가 커서 대략적인 금액만 넣었어요.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tabs button');
+  const panes = { plan: 'pane-plan', spots: 'pane-spots', info: 'pane-info', pack: 'pane-pack', cost: 'pane-cost' };
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.setAttribute('aria-selected', x === t ? 'true' : 'false'));
+    Object.entries(panes).forEach(([k, id]) => { document.getElementById(id).hidden = k !== t.dataset.pane; });
+  }));
+
+  const days = document.querySelectorAll('details.day');
+  const subs = document.querySelectorAll('.subtabs button');
+  subs.forEach(b => b.addEventListener('click', () => {
+    subs.forEach(x => x.classList.toggle('on', x === b));
+    const d = document.getElementById(b.dataset.day);
+    d.open = true;
+    d.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }));
+
+  const expand = document.getElementById('expandAll');
+  const sync = () => { expand.textContent = [...days].every(d => d.open) ? '일정 전체접기' : '일정 전체펼침'; };
+  expand.addEventListener('click', () => {
+    const all = [...days].every(d => d.open);
+    days.forEach(d => { d.open = !all; });
+    sync();
+  });
+  days.forEach(d => d.addEventListener('toggle', sync));
+
+  // 예상 경비 (1인, 원)
+  const costs = [
+    ['항공권', '인천⇄칭다오 왕복, 4월 주말', 250000, 450000],
+    ['숙소', '5.4 광장 인근 4성급 2박, 2인 1실 나눠 내기', 80000, 140000],
+    ['식비', '점심 3번, 저녁 2번, 간식 (약 450~700위안)', 90000, 140000],
+    ['입장료', '맥주박물관, 소어산, 천주교당 (약 80~100위안)', 16000, 20000],
+    ['현지 교통', '공항 왕복 + 시내 택시, 4명 분담 (약 80~130위안)', 16000, 25000],
+    ['통신', '해외 eSIM 3일 또는 로밍', 8000, 15000],
+    ['여행자 보험', '2박 3일', 5000, 12000],
+    ['쇼핑 · 기념품', '지모루 시장, 맥주, 간식', 30000, 100000]
+  ];
+  const won = n => Math.round(n / 1000) * 1000 === n ? n.toLocaleString('ko-KR') + '원' : Math.round(n).toLocaleString('ko-KR') + '원';
+  document.getElementById('costRows').innerHTML = costs.map(([k, b, lo, hi]) =>
+    `<tr><td><b>${k}</b></td><td><small>${b}</small></td><td class="num">${won(lo)}</td><td class="num">${won(hi)}</td></tr>`).join('');
+  const lo = costs.reduce((s, c) => s + c[2], 0), hi = costs.reduce((s, c) => s + c[3], 0);
+  document.getElementById('sumLo').textContent = won(lo);
+  document.getElementById('sumHi').textContent = won(hi);
+  const people = document.getElementById('people');
+  const group = () => {
+    const n = Math.min(20, Math.max(1, parseInt(people.value, 10) || 1));
+    document.getElementById('grpLabel').textContent = `일행 전체 (${n}명)`;
+    document.getElementById('grpLo').textContent = won(lo * n);
+    document.getElementById('grpHi').textContent = won(hi * n);
+  };
+  people.addEventListener('input', group);
+  group();
+</script>
